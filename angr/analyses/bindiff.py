@@ -486,6 +486,7 @@ class FunctionDiff:
         total_dist += _levenshtein_distance(block_a.operations, block_b.operations)
         total_dist += _levenshtein_distance(all_registers_a, all_registers_b)
         acceptable_differences = self._get_acceptable_constant_differences(block_a, block_b)
+        
         total_dist += _normalized_levenshtein_distance(consts_a, consts_b, acceptable_differences)
         total_dist += 0 if jumpkind_a == jumpkind_b else 1
 
@@ -498,7 +499,7 @@ class FunctionDiff:
 
         return similarity
 
-    def blocks_probably_identical(self, block_a, block_b, check_constants=False):
+    def blocks_probably_identical(self, block_a, block_b, check_constants=True):
         """
         :param block_a:         The first block address.
         :param block_b:         The second block address.
@@ -836,6 +837,9 @@ class FunctionDiff:
         # keep a set of the acceptable differences in constants between the two blocks
         acceptable_differences = set()
         acceptable_differences.add(0)
+
+        if len(block_a.instruction_addrs) == 0:
+            return acceptable_differences
 
         block_a_base = block_a.instruction_addrs[0]
         block_b_base = block_b.instruction_addrs[0]

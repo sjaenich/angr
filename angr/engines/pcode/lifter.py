@@ -830,6 +830,7 @@ class PcodeBasicBlockLifter:
                 "X86": "x86:LE:32:default",
                 "AMD64": "x86:LE:64:default",
                 "AVR8": "avr8:LE:16:atmega256",
+                "ARMHF": "ARM:LE:32:v8",
             }
             if arch.name not in archinfo_to_lang_map:
                 l.error("Unknown mapping of %s to pcode languge id", arch.name)

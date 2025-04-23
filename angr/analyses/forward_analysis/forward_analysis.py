@@ -245,7 +245,6 @@ class ForwardAnalysis(Generic[AnalysisState, NodeType, JobType, JobKey]):
             # An example is the CFG recovery.
 
             self._analysis_core_baremetal()
-
         else:
             # We have a base graph to follow. Just handle the current job.
 
@@ -307,7 +306,16 @@ class ForwardAnalysis(Generic[AnalysisState, NodeType, JobType, JobKey]):
 
         successors = set(self._graph_visitor.successors(node))
         # successors_to_visit = set()  # a collection of successors whose input states did not reach a fixed point
-
+        if (len(successors) == 1):
+            block = self.project.factory.block(
+                node.addr, node.size, opt_level=1, cross_insn_opt=self._vex_cross_insn_opt
+            )
+            ins = block.disassembly.insns[-1]
+            if ins.mnemonic == "pop.w" or ins.mnemonic == "pop":
+                if "pc" in ins.op_str:
+                    return successors
+        
+        
         for succ in successors:
             # if a node has only one predecessor, we overwrite existing input states
             # otherwise, we add the state as a new input state

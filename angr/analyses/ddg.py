@@ -399,6 +399,7 @@ class DDGViewInstruction:
                 raise KeyError("CFGNode for instruction %#x is not found." % self._insn_addr)
 
             # determine the statement ID
+            # TODO Determine correct opt_level self._cfg._iropt_level
             vex_block = self._project.factory.block(
                 cfg_node.addr, size=cfg_node.size, opt_level=self._cfg._iropt_level
             ).vex
@@ -688,7 +689,6 @@ class DDG(Analysis):
     def _construct(self):
         """
         Construct the data dependence graph.
-
         We track the following types of dependence:
         - (Intra-IRSB) temporary variable dependencies
         - Register dependencies
@@ -706,7 +706,7 @@ class DDG(Analysis):
         - Symbolic memory access
             Well, they cannot be tracked under fastpath mode (which is the mode we are generating the CTF) anyways.
         """
-
+        print("\n\t Starting DDG construction")
         worklist = []
         worklist_set = set()
 
@@ -719,6 +719,7 @@ class DDG(Analysis):
                     job = DDGJob(n, 0)
                     self._worklist_append(job, worklist, worklist_set)
         else:
+            print("\n\t\t Starting DDG with cfgmodel")
             for n in self._cfg.model.get_all_nodes(self._start):
                 job = DDGJob(n, 0)
                 self._worklist_append(job, worklist, worklist_set)
@@ -726,9 +727,10 @@ class DDG(Analysis):
         # A dict storing defs set
         # DDGJob -> LiveDefinition
         live_defs_per_node = {}
-
+        print("\n\t\t Starting DDG with worklist", len(worklist))
         while worklist:
             # Pop out a node
+            # print("\n\t\t\t Worklist length", len(worklist))
             ddg_job = worklist[0]
             l.debug("Processing %s.", ddg_job)
             node, call_depth = ddg_job.cfg_node, ddg_job.call_depth
@@ -769,9 +771,10 @@ class DDG(Analysis):
             matches = len(match_suc) == len(successing_nodes) and len(match_state) == len(final_states)
 
             for state in final_states:
-                if state.history.jumpkind == "Ijk_FakeRet" and len(final_states) > 1:
-                    # Skip fakerets if there are other control flow transitions available
-                    continue
+                # if state.history.jumpkind == "Ijk_FakeRet" and len(final_states) > 1:
+                #     # Skip fakerets if there are other control flow transitions available
+                #     continue
+
 
                 new_call_depth = call_depth
                 if state.history.jumpkind == "Ijk_Call":
@@ -783,12 +786,14 @@ class DDG(Analysis):
                     l.debug("Do not trace into %s due to the call depth limit", state.ip)
                     continue
 
+
                 new_defs = self._track(state, live_defs, node.irsb.statements if node.irsb is not None else None)
 
                 # corresponding_successors = [n for n in successing_nodes if
                 #                            not state.ip.symbolic and n.addr == state.solver.eval(state.ip)]
                 # if not corresponding_successors:
                 #    continue
+
 
                 changed = False
 
@@ -861,6 +866,7 @@ class DDG(Analysis):
         self._custom_data_per_statement = None
 
         for a in action_list:
+            
             if last_statement_id is None or last_statement_id != a.stmt_idx:
                 # update statement ID
                 last_statement_id = a.stmt_idx

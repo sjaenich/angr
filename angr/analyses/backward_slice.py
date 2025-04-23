@@ -406,6 +406,7 @@ class BackwardSlice(Analysis):
 
                 for p in predecessors:
                     if p not in accessed_taints:
+                        print("Predecessor", p)
                         taints.add(p)
 
                     self.taint_graph.add_edge(p, tainted_cl)
@@ -594,7 +595,7 @@ class BackwardSlice(Analysis):
             exit_statements_per_run = new_exit_statements_per_run
             new_exit_statements_per_run = defaultdict(list)
 
-    def _pick_statement(self, block_address, stmt_idx):
+    def _pick_statement(self, block_address, stmt_idx, instr_addr):
         """
         Include a statement in the final slice.
 
@@ -609,8 +610,8 @@ class BackwardSlice(Analysis):
             raise AngrBackwardSlicingError("Invalid block address %s." % block_address)
         if not isinstance(stmt_idx, int):
             raise AngrBackwardSlicingError("Invalid statement ID %s." % stmt_idx)
-
-        self.chosen_statements[block_address].add(stmt_idx)
+        
+        self.chosen_statements[block_address].add((stmt_idx,instr_addr))
 
     def _pick_exit(self, block_address, stmt_idx, target_ips):
         """
