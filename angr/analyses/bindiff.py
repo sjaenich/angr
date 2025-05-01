@@ -872,7 +872,7 @@ class BinDiff(Analysis):
     This class computes the a diff between two binaries represented by angr Projects
     """
 
-    def __init__(self, other_project, enable_advanced_backward_slicing=False, cfg_a=None, cfg_b=None):
+    def __init__(self, other_project, enable_advanced_backward_slicing=False, cfg_a=None, cfg_b=None, entry_point=None):
         """
         :param other_project: The second project to diff
         """
@@ -903,6 +903,8 @@ class BinDiff(Analysis):
 
         l.debug("Done computing cfg's")
 
+        self._entry_point = entry_point
+
         self._p2 = other_project
         self._attributes_a = {}
         self._attributes_b = {}
@@ -911,6 +913,8 @@ class BinDiff(Analysis):
         self.function_matches = set()
         self._unmatched_functions_from_a = set()
         self._unmatched_functions_from_b = set()
+
+
 
         self._compute_diff()
 
@@ -1121,7 +1125,7 @@ class BinDiff(Analysis):
         # get the initial matches
         initial_matches = self._get_plt_matches()
         initial_matches += self._get_name_matches()
-        initial_matches += self._get_function_matches(self.attributes_a, self.attributes_b)
+        initial_matches += self._get_function_matches(self.attributes_a, self.attributes_b, entry_point=self._entry_point)
         for a, b in initial_matches:
             l.debug("Initially matched (%#x, %#x)", a, b)
 
@@ -1213,7 +1217,7 @@ class BinDiff(Analysis):
                 del self._function_diffs[(x, y)]
 
     @staticmethod
-    def _get_function_matches(attributes_a, attributes_b, filter_set_a=None, filter_set_b=None):
+    def _get_function_matches(attributes_a, attributes_b, filter_set_a=None, filter_set_b=None, entry_point=None):
         """
         :param attributes_a:    A dict of functions to their attributes
         :param attributes_b:    A dict of functions to their attributes
@@ -1244,6 +1248,8 @@ class BinDiff(Analysis):
         for a in closest_a:
             if len(closest_a[a]) == 1:
                 match = closest_a[a][0]
+                if a == entry_point:
+                    matches.append((a,match))
                 if len(closest_b[match]) == 1 and closest_b[match][0] == a:
                     matches.append((a, match))
 
