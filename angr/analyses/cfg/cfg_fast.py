@@ -1754,15 +1754,15 @@ class CFGFast(ForwardAnalysis[CFGNode, CFGNode, CFGJob, int], CFGBase):  # pylin
             self._traced_addresses.add(addr)
 
         entries: List[CFGJob] = []
-
-        if (
-            self.functions.contains_addr(cfg_job.src_node.addr)
-            and self.functions[cfg_job.src_node.addr].is_default_name
-            and cfg_job.src_node.addr not in self.kb.labels
-            and cfg_job.jumpkind == "Ijk_Boring"
-        ):
-            # assign a name to the caller function that jumps to this procedure
-            self.functions[cfg_job.src_node.addr].name = procedure.display_name
+        if cfg_job.src_node is not None:
+            if (
+                self.functions.contains_addr(cfg_job.src_node.addr)
+                and self.functions[cfg_job.src_node.addr].is_default_name
+                and cfg_job.src_node.addr not in self.kb.labels
+                and cfg_job.jumpkind == "Ijk_Boring"
+            ):
+                # assign a name to the caller function that jumps to this procedure
+                self.functions[cfg_job.src_node.addr].name = procedure.display_name
 
         if procedure.ADDS_EXITS:
             # Get two blocks ahead
@@ -1886,6 +1886,10 @@ class CFGFast(ForwardAnalysis[CFGNode, CFGNode, CFGJob, int], CFGBase):  # pylin
 
         # irsb cannot be None here
         # assert irsb is not None
+        # irsb cannot be None here, but we add a check for resilience
+        if irsb is None:
+            return []
+
 
         # IRSB is only used once per CFGNode. We should be able to clean up the CFGNode here in order to save memory
         cfg_node.irsb = None
@@ -2460,12 +2464,12 @@ class CFGFast(ForwardAnalysis[CFGNode, CFGNode, CFGJob, int], CFGBase):  # pylin
         :param int irsb_addr: Address of block
         :return: None
         """
-
-        if irsb.data_refs:
-            self._process_irsb_data_refs(irsb)
-        elif irsb.statements:
-            # for each statement, collect all constants that are referenced or used.
-            self._collect_data_references_by_scanning_stmts(irsb, irsb_addr)
+        if irsb is not None:
+            if irsb.data_refs:
+                self._process_irsb_data_refs(irsb)
+            elif irsb.statements:
+                # for each statement, collect all constants that are referenced or used.
+                self._collect_data_references_by_scanning_stmts(irsb, irsb_addr)
 
     def _process_irsb_data_refs(self, irsb):
         assumption = self._decoding_assumptions.get(irsb.addr & ~1)

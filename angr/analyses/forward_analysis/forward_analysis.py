@@ -310,11 +310,12 @@ class ForwardAnalysis(Generic[AnalysisState, NodeType, JobType, JobKey]):
             block = self.project.factory.block(
                 node.addr, node.size, opt_level=1, cross_insn_opt=self._vex_cross_insn_opt
             )
-            ins = block.disassembly.insns[-1]
-            if ins.mnemonic == "pop.w" or ins.mnemonic == "pop":
-                if "pc" in ins.op_str:
-                    return successors
-        
+            if len(block.disassembly.insns) != 0:
+                ins = block.disassembly.insns[-1]
+                if ins.mnemonic == "pop.w" or ins.mnemonic == "pop":
+                    if "pc" in ins.op_str:
+                        return successors
+
         
         for succ in successors:
             # if a node has only one predecessor, we overwrite existing input states
