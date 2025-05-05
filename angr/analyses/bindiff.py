@@ -139,6 +139,8 @@ def _is_better_match(x, y, matched_a, matched_b, attributes_dict_a, attributes_d
     :param attributes_dict_b:   The attributes for each element in the second set.
     :returns:                   True/False
     """
+    if x not in attributes_dict_a or y not in attributes_dict_b:
+        return False
     attributes_x = attributes_dict_a[x]
     attributes_y = attributes_dict_b[y]
     if x in matched_a:
