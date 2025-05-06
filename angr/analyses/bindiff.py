@@ -152,6 +152,8 @@ def _is_better_match(x, y, matched_a, matched_b, attributes_dict_a, attributes_d
         if _euclidean_dist(attributes_x, attributes_y) >= _euclidean_dist(attributes_x, attributes_match):
             return False
     if y in matched_b:
+        if matched_b[y] not in attributes_dict_a:
+            return False
         attributes_match = attributes_dict_a[matched_b[y]]
         if _euclidean_dist(attributes_x, attributes_y) >= _euclidean_dist(attributes_y, attributes_match):
             return False
